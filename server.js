@@ -27,5 +27,4 @@ app.delete("/api/notes/:id", async (req, res) => {
 await Note.findByIdAndDelete(req.params.id);
 res.json({ message: "Deleted" });
 });
-app.listen(process.env.PORT || 3000, () => console.log("Server running on
-http://localhost:3000"));
+app.listen(process.env.PORT || 3000, () => console.log("Server running on http://localhost:3000"));
