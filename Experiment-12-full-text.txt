@@ -1,0 +1,184 @@
+EXPERIMENT 12
+Objective: Deploy a full-stack MERN (MongoDB, Express, React, Node.js) application
+on a cloud platform like AWS or Heroku.
+1. Aim
+To build a full-stack MERN notes application and deploy it on a cloud platform (Render).
+2. Software Required
+• Visual Studio Code (code editor)
+• Web Browser (Google Chrome)
+• Git and GitHub (version control and online repository)
+• Node.js and npm
+• Express.js and Mongoose
+• React.js 18 (CDN link) and Babel
+• MongoDB Atlas (free cloud database)
+• Render (cloud platform for deployment)
+3. Description
+MERN stands for MongoDB, Express.js, React and Node.js. MongoDB stores the data,
+Express and Node.js create the REST API, and React shows the user interface. All four
+use JavaScript.
+In this experiment, the Express server provides the API routes /api/notes for the Create,
+Read, Update and Delete operations and saves the notes in MongoDB Atlas using
+Mongoose. The React page is placed in the public folder, and the same Express server
+serves it, so only one application has to be deployed. The MongoDB link is kept in an
+environment variable named MONGO_URI.
+
+4. Source Code
+File 1: server.js
+require("dotenv").config();
+const express = require("express");
+const mongoose = require("mongoose");
+const app = express();
+app.use(express.json());
+app.use(express.static("public")); // the React page is in /public
+// M = MongoDB
+mongoose.connect(process.env.MONGO_URI)
+.then(() => console.log("MongoDB connected"))
+
+
+
+.catch((err) => console.log("MongoDB error:", err.message));
+const Note = mongoose.model("Note", new mongoose.Schema({ text: String }));
+//E + N = Express and Node API
+app.get("/api/notes", async (req, res) => {
+res.json(await Note.find());
+});
+app.post("/api/notes", async (req, res) => {
+res.json(await Note.create({ text: req.body.text }));
+});
+app.put("/api/notes/:id", async (req, res) => {
+res.json(await Note.findByIdAndUpdate(req.params.id, { text: req.body.text }, { new:
+true }));
+});
+app.delete("/api/notes/:id", async (req, res) => {
+await Note.findByIdAndDelete(req.params.id);
+res.json({ message: "Deleted" });
+});
+app.listen(process.env.PORT || 3000, () => console.log("Server running on
+http://localhost:3000"));
+File 2: public/index.html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MERN Notes</title>
+<style>
+body { font-family: Arial, sans-serif; text-align: center; margin: 20px; }
+.box { max-width: 450px; margin: 0 auto; padding: 15px; border: 1px solid gray; }
+input { padding: 6px; width: 50%; }
+button { padding: 6px 10px; margin-left: 5px; cursor: pointer; }
+ul { list-style: none; padding: 0; }
+li { background: #f2f2f2; color: #000; margin: 8px 0; padding: 8px; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js"></script>
+
+
+
+<script src="https://unpkg.com/react-dom@18.3.1/umd/reactdom.development.js"></script>
+<script src="https://unpkg.com/@babel/standalone@7.24.7/babel.min.js"></script>
+<script type="text/babel">
+function App() {
+const [notes, setNotes] = React.useState([]);
+const [text, setText] = React.useState("");
+const [editId, setEditId] = React.useState(null);
+// load notes from the server when the page opens
+React.useEffect(() => { loadNotes(); }, []);
+function loadNotes() {
+fetch("/api/notes").then((r) => r.json()).then((data) => setNotes(data));
+}
+function saveNote() {
+if (text.trim() === "") return;
+if (editId === null) {
+fetch("/api/notes", {
+method: "POST",
+headers: { "Content-Type": "application/json" },
+body: JSON.stringify({ text: text })
+}).then(loadNotes);
+} else {
+fetch("/api/notes/" + editId, {
+method: "PUT",
+headers: { "Content-Type": "application/json" },
+body: JSON.stringify({ text: text })
+}).then(loadNotes);
+setEditId(null);
+}
+setText("");
+}
+function deleteNote(id) {
+fetch("/api/notes/" + id, { method: "DELETE" }).then(loadNotes);
+}
+function editNote(note) {
+setText(note.text);
+setEditId(note._id);
+}
+return (
+<div className="box">
+<h1>MERN Notes</h1>
+
+
+
+<input value={text} onChange={(e) => setText(e.target.value)} placeholder="Write a
+note" />
+<button onClick={saveNote}>{editId === null ? "Add" : "Update"}</button>
+<ul>
+{notes.map((note) => (
+<li key={note._id}>
+{note.text}{" "}
+<button onClick={() => editNote(note)}>Edit</button>
+<button onClick={() => deleteNote(note._id)}>Delete</button>
+</li>
+))}
+</ul>
+{notes.length === 0 && <p>No notes yet.</p>}
+</div>
+);
+}
+ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+</script>
+</body>
+</html>
+File 3: package.json
+{
+"name": "mern-notes",
+"version": "1.0.0",
+"scripts": { "start": "node server.js" },
+"dependencies": {
+"dotenv": "^16.4.5",
+"express": "^4.19.2",
+"mongoose": "^8.5.0"
+}
+}
+File 4: .env.example
+MONGO_URI=mongodb+srv://j25ds170_db_user:uwvui4u025811c8y@cluster0.vvb1i6
+d.mongodb.net/
+6. Output
+A MERN notes application deployed on Render. Notes can be added, edited and
+deleted, and they are still there after refreshing the page because they are saved in
+MongoDB.
+
+
+
+Live Website Link: https://exp12-mern.onrender.com
+GitHub Repository Link: ABHISHEK-DHASMANA/exp12-mern
+Output Screenshots:
+notes added in the live app
+
+note edited and updated
+
+note deleted
+
+
+
+notes still present after refreshingthe page
+
+data in MongoDB Atlas (Browse Collections)
+
+Render dashboard showing Live
+
+7. Conclusion:
+In this experiment, I built and deployed a full-stack MERN application. I learned how
+React, Express, Node.js and MongoDB work together, how to use environment variables
+for secret values, and how to deploy a full-stack application on a cloud platform.

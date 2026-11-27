@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MERN Notes</title>
+<style>
+body { font-family: Arial, sans-serif; text-align: center; margin: 20px; }
+.box { max-width: 450px; margin: 0 auto; padding: 15px; border: 1px solid gray; }
+input { padding: 6px; width: 50%; }
+button { padding: 6px 10px; margin-left: 5px; cursor: pointer; }
+ul { list-style: none; padding: 0; }
+li { background: #f2f2f2; color: #000; margin: 8px 0; padding: 8px; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js"></script>
+
+
+
+<script src="https://unpkg.com/react-dom@18.3.1/umd/reactdom.development.js"></script>
+<script src="https://unpkg.com/@babel/standalone@7.24.7/babel.min.js"></script>
+<script type="text/babel">
+function App() {
+const [notes, setNotes] = React.useState([]);
+const [text, setText] = React.useState("");
+const [editId, setEditId] = React.useState(null);
+// load notes from the server when the page opens
+React.useEffect(() => { loadNotes(); }, []);
+function loadNotes() {
+fetch("/api/notes").then((r) => r.json()).then((data) => setNotes(data));
+}
+function saveNote() {
+if (text.trim() === "") return;
+if (editId === null) {
+fetch("/api/notes", {
+method: "POST",
+headers: { "Content-Type": "application/json" },
+body: JSON.stringify({ text: text })
+}).then(loadNotes);
+} else {
+fetch("/api/notes/" + editId, {
+method: "PUT",
+headers: { "Content-Type": "application/json" },
+body: JSON.stringify({ text: text })
+}).then(loadNotes);
+setEditId(null);
+}
+setText("");
+}
+function deleteNote(id) {
+fetch("/api/notes/" + id, { method: "DELETE" }).then(loadNotes);
+}
+function editNote(note) {
+setText(note.text);
+setEditId(note._id);
+}
+return (
+<div className="box">
+<h1>MERN Notes</h1>
+
+
+
+<input value={text} onChange={(e) => setText(e.target.value)} placeholder="Write a
+note" />
+<button onClick={saveNote}>{editId === null ? "Add" : "Update"}</button>
+<ul>
+{notes.map((note) => (
+<li key={note._id}>
+{note.text}{" "}
+<button onClick={() => editNote(note)}>Edit</button>
+<button onClick={() => deleteNote(note._id)}>Delete</button>
+</li>
+))}
+</ul>
+{notes.length === 0 && <p>No notes yet.</p>}
+</div>
+);
+}
+ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+</script>
+</body>
+</html>
